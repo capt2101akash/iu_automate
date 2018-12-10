@@ -1,5 +1,5 @@
 [local_host]
-68.183.218.117
+68.183.218.117    ansible_connection=local
 
 [local_host:vars]
 ssh_key_filename="ansible_rsa"
