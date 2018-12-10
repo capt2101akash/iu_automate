@@ -118,6 +118,13 @@
   gather_facts: false
   tasks:
 
+    - name: install python
+      shell: apt install python
+
+- hosts: local_host
+  gather_facts: false
+  tasks:
+
     - name: check ssh to remote hosts works
       shell: "hostname; id"
       register: ssh_connection_test
