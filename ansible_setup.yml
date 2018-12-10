@@ -128,6 +128,9 @@
 
     - name: update repo
       shell: apt update -y
+    
+    - name: install python
+      shell: apt install python
 
     - name: install firewall
       shell: apt install -y firewalld
@@ -155,7 +158,7 @@
     - name: install python3
       shell: apt install -y python3
 
-- hosts: ansible_setup_passwordless_setup_group
+- hosts: local_host
   gather_facts: false
   tasks:
 
