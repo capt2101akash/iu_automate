@@ -1,9 +1,9 @@
 [local_host]
-68.183.218.117    ansible_connection=local
+127.0.0.1    ansible_connection=local
 
 [local_host:vars]
 ssh_key_filename="ansible_rsa"
 remote_machine_username="root"
 
 [ansible_setup_passwordless_setup_group]
-68.183.214.74
+159.65.159.40
