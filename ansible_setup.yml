@@ -177,13 +177,15 @@
       shell: |
         virtualenv -p python3 k8s-cluster
         source k8s-cluster/bin/activate
+      args:
+        executable: /bin/bash
 
 - hosts: local_host
   gather_facts: false
   tasks:
 
     - name: cloning kubespray
-      shell: git clone https://{{username_github}}:{{password:github}}@github.com/springml/iu_kubernetes.git && cd iu_kubernetes/
+      shell: git clone https://{{username_github}}:{{password_github}}@github.com/springml/iu_kubernetes.git 2> /dev/null || (cd iu_automate/; git pull)  && cd iu_kubernetes/
       ignore_errors: True
     
     - name: install requirements of kubespray
