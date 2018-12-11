@@ -21,6 +21,8 @@
 ---
 - hosts: local_host
   gather_facts: false
+  vars:
+    worker_nodes: "{{ groups['k8s_worker_nodes'] | length }}"
   vars_prompt:
     - name: confirmation
       prompt: "Type 'YES' to establish passwordless login to the remote hosts:"
@@ -192,6 +194,14 @@
     - name: install requirements of kubespray
       shell: pip3 install -r kubespray/requirements.txt
 
+    - name: change hosts file
+      replace:
+        path: iu_kubernetes/kubespray/inventory/testCluster/hosts.ini
+        line: node{{item[1]}}    ansible_host={{remote_machine_username}}@{{item[0]}}
+        insertafter: "[all]"
+        with_nested:
+          - "{{ groups['k8s_worker_nodes']}}"
+          - "{{ lookup('sequence','start=1 end={{worker_nodes}}'}}"
     - name: Deploy cluster
       shell: "ansible-playbook -i ./kubespray/inventory/testCluster/hosts.ini ./kubespray/cluster.yml -T 32"
 
