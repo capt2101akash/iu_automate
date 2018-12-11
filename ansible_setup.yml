@@ -189,10 +189,9 @@
     - name: cloning kubespray
       shell: |
         git clone https://{{username_github}}:{{password_github}}@github.com/springml/iu_kubernetes.git 2> /dev/null || (cd iu_kubernetes/; git pull https://{{username_github}}:{{password_github}}@github.com/springml/iu_kubernetes.git)
-        cd iu_kubernetes/
 
     - name: install requirements of kubespray
-      shell: pip3 install -r kubespray/requirements.txt
+      shell: pip3 install -r iu_kubernetes/kubespray/requirements.txt
 
     - name: change hosts file
       replace:
@@ -203,7 +202,7 @@
           - "{{ groups['k8s_worker_nodes']}}"
           - "{{ lookup('sequence','start=1 end={{worker_nodes}}'}}"
     - name: Deploy cluster
-      shell: "ansible-playbook -i ./kubespray/inventory/testCluster/hosts.ini ./kubespray/cluster.yml -T 32"
+      shell: "ansible-playbook -i iu_kubernetes/kubespray/inventory/testCluster/hosts.ini ./kubespray/cluster.yml -T 32"
 
     - name: Create .kube directory
       shell: "mkdir -p .kube/"
