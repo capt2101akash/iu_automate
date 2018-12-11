@@ -184,6 +184,9 @@
 
 - hosts: local_host
   gather_facts: false
+  vars:
+    worker_nodes: "{{ groups['k8s_worker_nodes'] | length }}"
+    master_nodes: "{{ groups['k8s_master_nodes'] | length }}"
   tasks:
 
     - name: cloning kubespray
@@ -196,41 +199,39 @@
     - name: change hosts file-1
       lineinfile:
         path: iu_kubernetes/kubespray/inventory/testCluster/hosts.ini
-        line: "node{{item[1]}}    ansible_host={{remote_machine_username}}@{{item[0]}} ip={{item[0]}}"
+        line: "node{{item.0+1}}    ansible_host={{remote_machine_username}}@{{item.1}} ip={{item.1}}"
         insertafter: '^\[all\]'
-      with_nested:
-        - "{{ groups['k8s_worker_nodes']}}"
-        - "{{ lookup('sequence','start=1 end={{worker_nodes}}')}}"
+      with_indexed_items:
+        - "{{groups['k8s_worker_nodes']}}"
+          #- "{{ lookup('sequence','start=1 end={{worker_nodes}}')|list}}"
     - name: change hosts file-2
       lineinfile:
         path: iu_kubernetes/kubespray/inventory/testCluster/hosts.ini
-        line: "node{{item[1]}}"
+        line: "node{{item.0+1}}"
         insertafter: '^\[kube-node\]'
-      with_nested:
-        - "{{ groups['k8s_worker_nodes']}}"
-        - "{{ lookup('sequence','start=1 end={{worker_nodes}}')}}"
+      with_indexed_items:
+        - "{{groups['k8s_worker_nodes']}}"
     - name: change hosts file-3
       lineinfile:
         path: iu_kubernetes/kubespray/inventory/testCluster/hosts.ini
-        line: "node{{item[0]}}"
+        line: "node{{item.0+1}}"
         insertafter: '^\[kube-master\]'
-      with_nested:
-        - "{{ lookup('sequence','start=1 end={{master_nodes}}')}}"
+      with_indexed_items:
+        - "{{groups['k8s_master_nodes']}}"
     - name: change hosts file-4
       lineinfile:
         path: iu_kubernetes/kubespray/inventory/testCluster/hosts.ini
-        line: "node{{item[0]}}"
+        line: "node{{item.0+1}}"
         insertafter: '^\[etcd\]'
-      with_nested:
-        - "{{ lookup('sequence','start=1 end={{master_nodes}}')}}"
+      with_indexed_items:
+        - "{{groups['k8s_master_nodes']}}"
     - name: change hosts file-5
       lineinfile:
         path: iu_kubernetes/kubespray/inventory/testCluster/hosts.ini
-        line: "node{{item[0]}}"
+        line: "node{{item.0+1}}"
         insertafter: '^\[vault\]'
-      with_nested:
-        - "{{ lookup('sequence','start=1 end={{master_nodes}}')}}"
-
+      with_indexed_items:
+        - "{{groups['k8s_master_nodes']}}"
     - name: Deploy cluster
       shell: "ansible-playbook -i iu_kubernetes/kubespray/inventory/testCluster/hosts.ini iu_kubernetes/kubespray/cluster.yml -T 32"
 
