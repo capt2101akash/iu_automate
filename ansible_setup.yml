@@ -186,7 +186,7 @@
 
     - name: cloning kubespray
       shell: |
-        git clone https://{{username_github}}:{{password_github}}@github.com/springml/iu_kubernetes.git 2> /dev/null || (cd iu_kubernetes/; git pull)
+        git clone https://{{username_github}}:{{password_github}}@github.com/springml/iu_kubernetes.git 2> /dev/null || (cd iu_kubernetes/; git pull https://{{username_github}}:{{password_github}}@github.com/springml/iu_kubernetes.git)
         cd iu_kubernetes/
 
     - name: install requirements of kubespray
