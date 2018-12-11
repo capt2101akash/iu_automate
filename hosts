@@ -5,5 +5,7 @@
 ssh_key_filename="ansible_rsa"
 remote_machine_username="root"
 
-[ansible_setup_passwordless_setup_group]
-159.65.159.40
+[k8s_worker_nodes]
+
+[k8s_master_nodes]
+

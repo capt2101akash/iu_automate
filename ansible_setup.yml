@@ -100,7 +100,9 @@
         state: present
         backup: yes
       register: ssh_config_file_key_addition
-
+    
+    - name: install sshpass
+      shell: apt install -y sshpass
     # - debug:
     #     var: ssh_config_file_key_addition
 
@@ -108,18 +110,12 @@
       shell: "sshpass -p \"{{password}}\" ssh-copy-id -o StrictHostKeyChecking=no -i ~/.ssh/{{ssh_key_filename}}.pub {{remote_machine_username}}@{{item}}"
       register: ssh_copy_id_execution
       with_items: 
-        - "{{ groups['ansible_setup_passwordless_setup_group']}}"
+        - "{{ groups['k8s_worker_nodes']}}"
+        - "{{ groups['k8s_master_nodes']}}"
       failed_when: ssh_copy_id_execution.rc != 0
 
     # - debug:
     #     var: ssh_copy_id_execution
-
-- hosts: ansible_setup_passwordless_setup_group
-  gather_facts: false
-  tasks:
-
-    - name: install python
-      shell: apt install python
 
 - hosts: local_host
   gather_facts: false
@@ -170,49 +166,34 @@
   tasks:
 
     - name: cloning kubespray
-      shell: git clone https://github.com/kubernetes-incubator/kubespray.git
+      shell: git clone https://github.com/springml/iu_kubernetes.git && cd iu_kubernetes/
       ignore_errors: True
     
     - name: install requirements of kubespray
-      shell: pip3 install -r ./kubespray/requirements.txt
-
-    - name: declare IPs
-      shell: "declare -a IPS={{groups['ansible_setup_passwordless_setup_group'] | join(',') }}"
-      register: declare_ip_execution
-      args:
-        executable: /bin/bash
-      #shell: "sshpass -p \"{{remote_machine_password}}\" ssh-copy-id -o StrictHostKeyChecking=no -i ~/.ssh/{{ssh_key_filename}}.pub {{remote_machine_username}}@{{item}}"
-      #register: ssh_copy_id_execution
-      #with_items: 
-      #  - "{{ groups['ansible_setup_passwordless_setup_group']}}"
-      failed_when: declare_ip_execution.rc != 0
-      #ignore_errors: True
-
-    - name: Alter hosts file
-      shell: "CONFIG_FILE=./kubespray/inventory/sample/hosts.ini python3 ./kubespray/contrib/inventory_builder/inventory.py {{ groups['ansible_setup_passwordless_setup_group'] | join(' ') }}"
-      args:
-        executable: /bin/bash
-
-    - name: setting network plugin
-      lineinfile:
-        path: ./kubespray/inventory/sample/group_vars/k8s-cluster/k8s-cluster.yml
-        state: present
-        regexp: 'kube_network_plugin'
-        line: 'kube_network_plugin: weave'
-    
-    - name: Enabling metrics kubelet port 
-      lineinfile:
-        path: ./kubespray/inventory/sample/group_vars/all/all.yml
-        state: present
-        regexp: '#kube_read_only_port: 10255'
-        line: 'kube_read_only_port: 10255'
-
-    - name: "setting hostnames"
-      replace:
-        path: ./kubespray/inventory/sample/hosts.ini
-        regexp: 'ansible_host='
-        replace: 'ansible_host=root@'
+      shell: pip install -r ./kubespray/requirements.txt
 
     - name: Deploy cluster
-      shell: "ansible-playbook -i ./kubespray/inventory/sample/hosts.ini ./kubespray/cluster.yml -T 32"
+      shell: "ansible-playbook -i ./kubespray/inventory/testCluster/hosts.ini ./kubespray/cluster.yml -T 32"
 
+    - name: Create .kube directory
+      shell: "mkdir -p .kube/"
+
+    - name: Copy kube config file 
+      shell: "sudo scp {{remote_machine_username}}@{{item}}:/etc/kubernetes/admin.conf .kube/config"
+
+    - name: Install kubectl 
+      shell: |
+        sudo apt-get update && sudo apt-get install -y apt-transport-https"
+        curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -"
+        echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+        sudo apt-get update
+        sudo apt-get install -y kubectl
+
+    - name: Install helm and tiller
+      shell: |
+        curl https://raw.githubusercontent.com/helm/helm/master/scripts/get > get_helm.sh
+        chmod 700 get_helm.sh
+        ./get_helm.sh
+        kubectl create serviceaccount --namespace kube-system tiller
+        kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+        helm init --service-account tiller
