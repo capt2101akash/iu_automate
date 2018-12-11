@@ -239,7 +239,7 @@
       shell: "mkdir -p .kube/"
 
     - name: Copy kube config file 
-      shell: "sudo scp {{remote_machine_username}}@{{item[0]}}:/etc/kubernetes/admin.conf .kube/config"
+      shell: "sudo scp {{remote_machine_username}}@{{item[0]}}:/etc/kubernetes/admin.conf ../.kube/config"
       loop:
         - "{{groups['k8s_master_nodes']}}"
       loop_control:
