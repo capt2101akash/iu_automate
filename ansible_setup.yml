@@ -192,17 +192,47 @@
 
     - name: install requirements of kubespray
       shell: pip3 install -r iu_kubernetes/kubespray/requirements.txt
-
-    - name: change hosts file
-      replace:
+    
+    - name: change hosts file-1
+      lineinfile:
         path: iu_kubernetes/kubespray/inventory/testCluster/hosts.ini
-        line: node{{item[1]}}    ansible_host={{remote_machine_username}}@{{item[0]}}
-        insertafter: "[all]"
-        with_nested:
-          - "{{ groups['k8s_worker_nodes']}}"
-          - "{{ lookup('sequence','start=1 end={{worker_nodes}}'}}"
+        line: "node{{item[1]}}    ansible_host={{remote_machine_username}}@{{item[0]}} ip={{item[0]}}"
+        insertafter: '^\[all\]'
+      with_nested:
+        - "{{ groups['k8s_worker_nodes']}}"
+        - "{{ lookup('sequence','start=1 end={{worker_nodes}}')}}"
+    - name: change hosts file-2
+      lineinfile:
+        path: iu_kubernetes/kubespray/inventory/testCluster/hosts.ini
+        line: "node{{item[1]}}"
+        insertafter: '^\[kube-node\]'
+      with_nested:
+        - "{{ groups['k8s_worker_nodes']}}"
+        - "{{ lookup('sequence','start=1 end={{worker_nodes}}')}}"
+    - name: change hosts file-3
+      lineinfile:
+        path: iu_kubernetes/kubespray/inventory/testCluster/hosts.ini
+        line: "node{{item[0]}}"
+        insertafter: '^\[kube-master\]'
+      with_nested:
+        - "{{ lookup('sequence','start=1 end={{master_nodes}}')}}"
+    - name: change hosts file-4
+      lineinfile:
+        path: iu_kubernetes/kubespray/inventory/testCluster/hosts.ini
+        line: "node{{item[0]}}"
+        insertafter: '^\[etcd\]'
+      with_nested:
+        - "{{ lookup('sequence','start=1 end={{master_nodes}}')}}"
+    - name: change hosts file-5
+      lineinfile:
+        path: iu_kubernetes/kubespray/inventory/testCluster/hosts.ini
+        line: "node{{item[0]}}"
+        insertafter: '^\[vault\]'
+      with_nested:
+        - "{{ lookup('sequence','start=1 end={{master_nodes}}')}}"
+
     - name: Deploy cluster
-      shell: "ansible-playbook -i iu_kubernetes/kubespray/inventory/testCluster/hosts.ini ./kubespray/cluster.yml -T 32"
+      shell: "ansible-playbook -i iu_kubernetes/kubespray/inventory/testCluster/hosts.ini iu_kubernetes/kubespray/cluster.yml -T 32"
 
     - name: Create .kube directory
       shell: "mkdir -p .kube/"
