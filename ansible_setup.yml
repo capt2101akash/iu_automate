@@ -185,11 +185,12 @@
   tasks:
 
     - name: cloning kubespray
-      shell: git clone https://{{username_github}}:{{password_github}}@github.com/springml/iu_kubernetes.git 2> /dev/null || (cd iu_automate/; git pull)  && cd iu_kubernetes/
-      ignore_errors: True
-    
+      shell: |
+        git clone https://{{username_github}}:{{password_github}}@github.com/springml/iu_kubernetes.git 2> /dev/null || (cd iu_kubernetes/; git pull)
+        cd iu_kubernetes/
+
     - name: install requirements of kubespray
-      shell: pip3 install -r ./kubespray/requirements.txt
+      shell: pip3 install -r kubespray/requirements.txt
 
     - name: Deploy cluster
       shell: "ansible-playbook -i ./kubespray/inventory/testCluster/hosts.ini ./kubespray/cluster.yml -T 32"
