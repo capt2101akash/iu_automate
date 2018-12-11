@@ -6,5 +6,6 @@ ssh_key_filename="ansible_rsa"
 remote_machine_username="root"
 
 [k8s_worker_nodes]
-
+159.89.161.83
 [k8s_master_nodes]
+159.89.161.83

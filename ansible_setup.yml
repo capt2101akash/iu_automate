@@ -43,7 +43,7 @@
   pre_tasks:
     - name: "Check Confirmation"
       fail: msg="Exiting... You must type 'YES' to continue."
-      when: confirmation != "YES"
+      when: confirmation != 'YES'
 
   tasks:
     - name: check .ssh local directory exists
@@ -232,19 +232,23 @@
         insertafter: '^\[vault\]'
       with_indexed_items:
         - "{{groups['k8s_master_nodes']}}"
-    - name: Deploy cluster
-      shell: "ansible-playbook -i iu_kubernetes/kubespray/inventory/testCluster/hosts.ini iu_kubernetes/kubespray/cluster.yml -T 32"
+          #- name: Deploy cluster
+      #shell: "ansible-playbook -i iu_kubernetes/kubespray/inventory/testCluster/hosts.ini iu_kubernetes/kubespray/cluster.yml -T 32"
 
     - name: Create .kube directory
       shell: "mkdir -p .kube/"
 
     - name: Copy kube config file 
-      shell: "sudo scp {{remote_machine_username}}@{{item}}:/etc/kubernetes/admin.conf .kube/config"
-
+      shell: "sudo scp {{remote_machine_username}}@{{item[0]}}:/etc/kubernetes/admin.conf .kube/config"
+      loop:
+        - "{{groups['k8s_master_nodes']}}"
+      loop_control:
+        index_var: id
     - name: Install kubectl 
       shell: |
-        sudo apt-get update && sudo apt-get install -y apt-transport-https"
-        curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -"
+        curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+        sudo apt-get update && sudo apt-get install -y apt-transport-https
+        curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
         echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
         sudo apt-get update
         sudo apt-get install -y kubectl
