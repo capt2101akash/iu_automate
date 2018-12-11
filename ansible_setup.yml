@@ -232,8 +232,8 @@
         insertafter: '^\[vault\]'
       with_indexed_items:
         - "{{groups['k8s_master_nodes']}}"
-          #- name: Deploy cluster
-      #shell: "ansible-playbook -i iu_kubernetes/kubespray/inventory/testCluster/hosts.ini iu_kubernetes/kubespray/cluster.yml -T 32"
+    - name: Deploy cluster
+      shell: "ansible-playbook -i iu_kubernetes/kubespray/inventory/testCluster/hosts.ini iu_kubernetes/kubespray/cluster.yml -T 32"
 
     - name: Create .kube directory
       shell: "mkdir -p .kube/"
