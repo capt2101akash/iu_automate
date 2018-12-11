@@ -32,6 +32,12 @@
       prompt: "Enter Remote user password"
       private: yes
 
+    - name: username_github
+      prompt: "Enter username"
+
+    - name: password_github
+      prompt: "Enter password"
+
   pre_tasks:
     - name: "Check Confirmation"
       fail: msg="Exiting... You must type 'YES' to continue."
@@ -152,25 +158,36 @@
     - name: install git
       shell: apt install -y git
 
+    - name: install python-pip
+      shell: apt install -y python-pip
+
     - name: install python3-pip
       shell: apt install -y python3-pip
 
     - name: install jinja2
-      shell: pip3 install jinja2
+      shell: pip install jinja2
 
     - name: install python3
       shell: apt install -y python3
+
+    - name: install virtualenv
+      shell: apt install -y virtualenv
+
+    - name: Create virtualenv and use it
+      shell: |
+        virtualenv -p python3 k8s-cluster
+        source k8s-cluster/bin/activate
 
 - hosts: local_host
   gather_facts: false
   tasks:
 
     - name: cloning kubespray
-      shell: git clone https://github.com/springml/iu_kubernetes.git && cd iu_kubernetes/
+      shell: git clone https://{{username_github}}:{{password:github}}@github.com/springml/iu_kubernetes.git && cd iu_kubernetes/
       ignore_errors: True
     
     - name: install requirements of kubespray
-      shell: pip install -r ./kubespray/requirements.txt
+      shell: pip3 install -r ./kubespray/requirements.txt
 
     - name: Deploy cluster
       shell: "ansible-playbook -i ./kubespray/inventory/testCluster/hosts.ini ./kubespray/cluster.yml -T 32"
